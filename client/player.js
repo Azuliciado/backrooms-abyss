@@ -2,8 +2,15 @@ class LocalPlayerController {
   constructor(camera, scene) {
     this.camera = camera;
     this.scene = scene;
-    this.position = new THREE.Vector3(0, 1.7, 10);
+    this.position = new THREE.Vector3(0, 1.7, 8);
     this.velocity = new THREE.Vector3();
+    this.yaw = 0;
+    this.pitch = 0;
+    this.speed = 5;
+    this.sprintSpeed = 8;
+    this.crouchSpeed = 2.5;
+    this.currentSpeed = this.speed;
+    this.isGrounded = true;
     this.input = {
       forward: false,
       backward: false,
@@ -14,54 +21,71 @@ class LocalPlayerController {
       jump: false,
       flashlight: false
     };
-    this.pitch = 0;
-    this.yaw = 0;
-    this.isGrounded = true;
-    this.speed = 5;
-    this.sprintSpeed = 8.2;
-    this.crouchSpeed = 2.5;
-    this.height = 1.7;
+    this.raycaster = new THREE.Raycaster();
+    this.inventory = new InventoryManager();
   }
 
-  setInput(inputState) {
-    this.input = { ...this.input, ...inputState };
+  setInput(input) {
+    this.input = { ...this.input, ...input };
   }
 
-  update(dt) {
-    const moveDir = new THREE.Vector3();
-    const forward = new THREE.Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw));
-    const right = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
+  update(deltaTime) {
+    const moveDirection = new THREE.Vector3();
 
-    if (this.input.forward) moveDir.add(forward);
-    if (this.input.backward) moveDir.sub(forward);
-    if (this.input.right) moveDir.add(right);
-    if (this.input.left) moveDir.sub(right);
+    if (this.input.forward) moveDirection.z -= 1;
+    if (this.input.backward) moveDirection.z += 1;
+    if (this.input.left) moveDirection.x -= 1;
+    if (this.input.right) moveDirection.x += 1;
 
-    if (moveDir.lengthSq() > 0) {
-      moveDir.normalize();
+    if (moveDirection.lengthSq() > 0) {
+      moveDirection.normalize();
+
+      if (this.input.sprint && window.appShouldSprint !== false) {
+        this.currentSpeed = this.sprintSpeed;
+      } else if (this.input.crouch) {
+        this.currentSpeed = this.crouchSpeed;
+      } else {
+        this.currentSpeed = this.speed;
+      }
+
+      const worldDirection = new THREE.Vector3();
+      worldDirection.x = Math.sin(this.yaw) * moveDirection.z + Math.cos(this.yaw) * moveDirection.x;
+      worldDirection.z = Math.cos(this.yaw) * moveDirection.z - Math.sin(this.yaw) * moveDirection.x;
+
+      this.position.add(worldDirection.multiplyScalar(this.currentSpeed * deltaTime));
     }
 
-    const isSprinting = this.input.sprint && this.input.forward;
-    const speed = isSprinting ? this.sprintSpeed : this.crouchSpeed;
-    const target = moveDir.multiplyScalar(speed);
-    this.velocity.x = THREE.MathUtils.lerp(this.velocity.x, target.x, 0.12);
-    this.velocity.z = THREE.MathUtils.lerp(this.velocity.z, target.z, 0.12);
-    this.position.x += this.velocity.x * dt;
-    this.position.z += this.velocity.z * dt;
+    this.velocity.y = Math.max(this.velocity.y - 9.8 * deltaTime, -20);
+    this.position.y += this.velocity.y * deltaTime;
 
-    this.position.x = THREE.MathUtils.clamp(this.position.x, -20, 20);
-    this.position.z = THREE.MathUtils.clamp(this.position.z, -20, 20);
+    if (this.position.y < 1.6) {
+      this.position.y = 1.6;
+      this.velocity.y = 0;
+      this.isGrounded = true;
+    } else {
+      this.isGrounded = false;
+    }
 
-    this.camera.position.set(this.position.x, this.position.y, this.position.z);
+    if (this.input.jump && this.isGrounded) {
+      this.velocity.y = 5;
+      this.isGrounded = false;
+    }
+
+    this.camera.position.copy(this.position);
     this.camera.rotation.order = 'YXZ';
     this.camera.rotation.y = this.yaw;
     this.camera.rotation.x = this.pitch;
   }
 
-  applyMouseLook(deltaX, deltaY) {
-    this.yaw -= deltaX * 0.0018;
-    this.pitch -= deltaY * 0.0015;
-    this.pitch = THREE.MathUtils.clamp(this.pitch, -1.55, 1.55);
+  updateRotation(deltaX, deltaY, sensitivity = 0.003) {
+    this.yaw -= deltaX * sensitivity;
+    this.pitch -= deltaY * sensitivity;
+    this.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.pitch));
+  }
+
+  interact() {
+    this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+    // TODO: Check for interactable objects in the scene
   }
 }
 

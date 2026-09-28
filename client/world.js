@@ -1,88 +1,138 @@
-function createBackroomsWorld(scene, graphicsPreset = 'REGULAR') {
-  const world = new THREE.Group();
-  scene.add(world);
+function getGraphicsSettings(preset) {
+  const settings = {
+    POTATO: {
+      renderDistance: 15,
+      lightIntensity: 0.6,
+      shadowQuality: 512,
+      textureQuality: 0.5,
+      particleCount: 20,
+      postProcessing: false
+    },
+    REGULAR: {
+      renderDistance: 35,
+      lightIntensity: 0.9,
+      shadowQuality: 1024,
+      textureQuality: 1.0,
+      particleCount: 80,
+      postProcessing: true
+    },
+    'RTX / ULTRA': {
+      renderDistance: 60,
+      lightIntensity: 1.2,
+      shadowQuality: 2048,
+      textureQuality: 2.0,
+      particleCount: 200,
+      postProcessing: true
+    }
+  };
+  return settings[preset] || settings.REGULAR;
+}
 
-  const materialWall = new THREE.MeshStandardMaterial({
-    color: 0xd9c76b,
-    roughness: 1,
+function createBackroomsWorld(scene, preset = 'REGULAR') {
+  const world = {
+    light: new THREE.DirectionalLight(0xb0c4de, 1),
+    ambientLight: null
+  };
+
+  world.light.position.set(10, 15, 10);
+  world.light.castShadow = true;
+  world.light.shadow.mapSize.width = 2048;
+  world.light.shadow.mapSize.height = 2048;
+  world.light.shadow.camera.left = -50;
+  world.light.shadow.camera.right = 50;
+  world.light.shadow.camera.top = 50;
+  world.light.shadow.camera.bottom = -50;
+  world.light.shadow.camera.far = 100;
+  scene.add(world.light);
+
+  // Create Level 0 - The Lobby
+  createLevel0(scene, preset);
+
+  return world;
+}
+
+function createLevel0(scene, preset) {
+  const graphicsSettings = getGraphicsSettings(preset);
+
+  // Floor
+  const floorGeometry = new THREE.PlaneGeometry(100, 100);
+  const floorMaterial = new THREE.MeshStandardMaterial({
+    color: 0x9a8b6e,
+    roughness: 0.9,
+    metalness: 0.0
+  });
+  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // Create repeating hallway structure
+  for (let i = 0; i < 5; i++) {
+    createHallwaySegment(scene, i * 15, graphicsSettings);
+  }
+
+  // Ceiling
+  const ceilingGeometry = new THREE.PlaneGeometry(100, 100);
+  const ceilingMaterial = new THREE.MeshStandardMaterial({
+    color: 0x7a7a7a,
+    roughness: 0.8,
     metalness: 0.1
   });
+  const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+  ceiling.position.y = 4;
+  ceiling.rotation.x = Math.PI / 2;
+  ceiling.receiveShadow = true;
+  scene.add(ceiling);
 
-  const materialFloor = new THREE.MeshStandardMaterial({
-    color: 0xb9a75d,
-    roughness: 1,
-    metalness: 0.05
-  });
-
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(120, 1, 120), materialFloor);
-  floor.position.y = -0.5;
-  world.add(floor);
-
-  const wallHeight = 5;
-  const hallwayWidth = 8;
-
-  const wallData = [
-    { x: 0, y: wallHeight / 2, z: -24, w: 60, h: wallHeight, d: 1 },
-    { x: 0, y: wallHeight / 2, z: 24, w: 60, h: wallHeight, d: 1 },
-    { x: -24, y: wallHeight / 2, z: 0, w: 1, h: wallHeight, d: 60 },
-    { x: 24, y: wallHeight / 2, z: 0, w: 1, h: wallHeight, d: 60 },
-    { x: 0, y: wallHeight / 2, z: 0, w: 12, h: wallHeight, d: 40 }
-  ];
-
-  wallData.forEach((wallDef) => {
-    const wall = new THREE.Mesh(
-      new THREE.BoxGeometry(wallDef.w, wallDef.h, wallDef.d),
-      materialWall
-    );
-    wall.position.set(wallDef.x, wallDef.y, wallDef.z);
-    world.add(wall);
-  });
-
-  const lightMaterial = new THREE.MeshStandardMaterial({ color: 0xf3f3c7, emissive: 0xffef9e, emissiveIntensity: 0.8 });
-  for (let x = -18; x <= 18; x += 6) {
-    const light = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.4), lightMaterial);
-    light.position.set(x, 4.5, 0);
-    world.add(light);
+  // Fluorescent lights
+  for (let x = -40; x < 40; x += 5) {
+    for (let z = -40; z < 40; z += 5) {
+      createFluorescentLight(scene, x, 3.8, z);
+    }
   }
+}
 
-  const ceilingLight = new THREE.PointLight(0xf8e7a5, 0.9, 30, 2);
-  ceilingLight.position.set(0, 4.2, 0);
-  world.add(ceilingLight);
+function createHallwaySegment(scene, zOffset, graphicsSettings) {
+  // Left wall
+  const leftWallGeo = new THREE.BoxGeometry(1, 4, 15);
+  const wallMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffeb99,
+    roughness: 0.8,
+    metalness: 0.0
+  });
+  const leftWall = new THREE.Mesh(leftWallGeo, wallMaterial);
+  leftWall.position.set(-5, 2, zOffset);
+  leftWall.castShadow = true;
+  leftWall.receiveShadow = true;
+  scene.add(leftWall);
 
-  const fogColor = new THREE.Color(0x1a1a22);
-  scene.fog = new THREE.Fog(fogColor, 10, 45);
+  // Right wall
+  const rightWall = new THREE.Mesh(leftWallGeo, wallMaterial);
+  rightWall.position.set(5, 2, zOffset);
+  rightWall.castShadow = true;
+  rightWall.receiveShadow = true;
+  scene.add(rightWall);
+}
 
-  const props = new THREE.Group();
-  for (let i = 0; i < 24; i++) {
-    const column = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.7, 0.7, 3.2, 8),
-      new THREE.MeshStandardMaterial({ color: 0xb7a35a, roughness: 1 })
-    );
-    column.position.set((Math.random() - 0.5) * 30, 1.5, (Math.random() - 0.5) * 30);
-    props.add(column);
-  }
-  world.add(props);
+function createFluorescentLight(scene, x, y, z) {
+  // Light source
+  const light = new THREE.PointLight(0xb0c4de, 2, 15);
+  light.position.set(x, y, z);
+  light.castShadow = true;
+  scene.add(light);
 
-  const exitFrame = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 3, 0.4),
-    new THREE.MeshStandardMaterial({ color: 0x556677, metalness: 0.5 })
-  );
-  exitFrame.position.set(0, 1.5, 18.4);
-  world.add(exitFrame);
-
-  const exitDoor = new THREE.Mesh(
-    new THREE.BoxGeometry(2.2, 2.2, 0.2),
-    new THREE.MeshStandardMaterial({ color: 0x2a3037, roughness: 0.8 })
-  );
-  exitDoor.position.set(0, 1.5, 18.7);
-  world.add(exitDoor);
-
-  return {
-    group: world,
-    props,
-    exit: exitDoor,
-    light: ceilingLight
-  };
+  // Visual fixture
+  const fixtureGeo = new THREE.BoxGeometry(0.8, 0.1, 0.8);
+  const fixtureMat = new THREE.MeshStandardMaterial({
+    color: 0x444444,
+    metalness: 0.8,
+    roughness: 0.2
+  });
+  const fixture = new THREE.Mesh(fixtureGeo, fixtureMat);
+  fixture.position.set(x, y, z);
+  fixture.castShadow = true;
+  scene.add(fixture);
 }
 
 window.createBackroomsWorld = createBackroomsWorld;
+window.getGraphicsSettings = getGraphicsSettings;
