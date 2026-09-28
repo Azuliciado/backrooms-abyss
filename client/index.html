@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BACKROOMS: ABYSS</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="menuScreen" class="screen active">
+      <div class="panel">
+        <div class="title">BACKROOMS<br />ABYSS</div>
+        <div class="subtitle">You are not supposed to be here.</div>
+        <div class="menu-grid">
+          <button id="startTutorialBtn">TUTORIAL</button>
+          <button id="playBtn">PLAY</button>
+          <button id="multiplayerBtn">MULTIPLAYER</button>
+          <button id="createRoomBtn">CREATE ROOM</button>
+          <button id="joinRoomBtn">JOIN ROOM</button>
+          <button id="publicRoomsBtn">PUBLIC ROOMS</button>
+          <button id="settingsBtn">SETTINGS</button>
+          <button id="graphicsBtn">GRAPHICS</button>
+          <button id="controlsBtn">CONTROLS</button>
+          <button id="creditsBtn">CREDITS</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="setupScreen" class="screen">
+      <div class="panel">
+        <div class="title">WELCOME</div>
+        <div class="form-grid">
+          <label>
+            <div>ENTER USERNAME</div>
+            <input id="usernameInput" maxlength="16" value="" placeholder="PlayerName" />
+          </label>
+          <button id="submitUsername">CONTINUE</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="developerScreen" class="screen">
+      <div class="panel">
+        <div class="title">DEVELOPER LOGIN</div>
+        <div class="form-grid">
+          <div>DEVELOPER ACCESS</div>
+          <input id="developerPassword" type="password" placeholder="Enter developer password" />
+          <button id="developerVerify">VERIFY</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="roomBrowserScreen" class="screen">
+      <div class="panel">
+        <div class="title">PUBLIC ROOMS</div>
+        <div class="row">
+          <input id="joinCodeInput" placeholder="Room code" />
+          <button id="joinCodeBtn">JOIN CODE</button>
+          <button id="refreshRoomsBtn">REFRESH</button>
+        </div>
+        <div class="form-grid">
+          <label>
+            ROOM NAME
+            <input id="roomName" value="The Yellow Hall" />
+          </label>
+          <div class="row">
+            <select id="maxPlayers">
+              <option value="2">2</option>
+              <option value="4">4</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+              <option value="10" selected>10</option>
+            </select>
+            <select id="modeSelect">
+              <option value="NORMAL">NORMAL</option>
+              <option value="HARDCORE">HARDCORE</option>
+              <option value="NIGHTMARE">NIGHTMARE</option>
+            </select>
+            <select id="difficultySelect">
+              <option value="NORMAL">NORMAL</option>
+              <option value="HARDCORE">HARDCORE</option>
+              <option value="NIGHTMARE">NIGHTMARE</option>
+            </select>
+          </div>
+          <div class="row">
+            <select id="publicPrivate">
+              <option value="PUBLIC">PUBLIC</option>
+              <option value="PRIVATE">PRIVATE</option>
+            </select>
+          </div>
+          <button id="createRoomBtn">CREATE ROOM</button>
+        </div>
+        <div id="roomList"></div>
+      </div>
+    </div>
+
+    <div id="lobbyScreen" class="screen">
+      <div class="panel">
+        <div class="title">ROOM LOBBY</div>
+        <div class="subtitle">ROOM CODE: <strong id="lobbyCode">---</strong></div>
+        <div class="subtitle">ROOM: <strong id="lobbyRoomName">---</strong></div>
+        <div class="subtitle">PLAYERS: <span id="lobbyPlayers">0/0</span></div>
+        <ul id="playerList"></ul>
+        <div class="row">
+          <button id="toggleReadyBtn">READY</button>
+          <button id="copyCodeBtn">COPY CODE</button>
+          <button id="leaveRoomBtn">LEAVE ROOM</button>
+          <button id="startGameBtn">START GAME</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="gameHUD" class="hud">
+      <div class="hud-top">
+        <div id="hudHealth" class="stat">HP: 100</div>
+        <div id="hudStamina" class="stat">STAMINA: 100</div>
+        <div id="hudSanity" class="stat">SANITY: 100</div>
+        <div id="hudBattery" class="stat">BATTERY: 100</div>
+      </div>
+      <div class="hud-right">
+        <div id="hudObjective">OBJECTIVE: Find the exit</div>
+        <div class="small">Level 0</div>
+      </div>
+      <div class="crosshair"></div>
+      <div id="prompt" class="prompt">[E] INTERACT</div>
+      <div id="chatLog"></div>
+      <input id="chatInput" type="text" placeholder="Chat..." />
+    </div>
+
+    <div id="adminPanel">
+      <div class="title" style="font-size: 24px;">ABYSS ADMIN</div>
+      <div class="small">ADMIN · Azuliciado · SERVER VERIFIED</div>
+      <div class="admin-grid">
+        <button>PLAYER MANAGEMENT</button>
+        <button>ENTITY CONTROL</button>
+        <button>WORLD CONTROL</button>
+        <button>DEBUG</button>
+      </div>
+      <button id="adminPanelClose">CLOSE</button>
+    </div>
+
+    <div id="toast" class="toast">Connected</div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js"></script>
+    <script src="./settings.js"></script>
+    <script src="./audio.js"></script>
+    <script src="./world.js"></script>
+    <script src="./player.js"></script>
+    <script src="./ui.js"></script>
+    <script src="./game.js"></script>
+  </body>
+</html>
