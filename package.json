@@ -1,14 +1,32 @@
 {
   "name": "backrooms-abyss",
   "version": "1.0.0",
-  "description": "BACKROOMS: ABYSS - playable multiplayer 3D horror game",
+  "description": "A complete, fully-functional 3D multiplayer Backrooms horror game",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "node server/server.js"
+    "dev": "nodemon server/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "backrooms",
+    "horror",
+    "game",
+    "multiplayer",
+    "three.js",
+    "websocket"
+  ],
+  "author": "Azuliciado",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "express": "^4.18.2",
+    "socket.io": "^4.5.4",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
